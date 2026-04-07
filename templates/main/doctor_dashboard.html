@@ -1,0 +1,32 @@
+{% extends 'main/base.html' %}
+{% block content %}
+
+<h2 class="mb-3">👨‍⚕️ Doctor Dashboard</h2>
+
+{% for patient in patients %}
+  <div>
+    <h4>{{ patient.username }}</h4>
+    <a href="{% url 'patient_detail' patient.id %}">View Details</a>
+    <a href="{% url 'add_medicine' patient.id %}">Add Medicine</a>
+  </div>
+{% endfor %}
+
+{% for med in medicines %}
+<div class="card p-3 mb-3 shadow">
+    <h5>{{ med.name }}</h5>
+    <p><strong>Patient:</strong> {{ med.patient.username }}</p>
+    <p><strong>Dosage:</strong> {{ med.dosage }}</p>
+    <p><strong>Time:</strong> {{ med.time }}</p>
+
+    <span class="badge 
+        {% if med.status == 'taken' %}bg-success
+        {% elif med.status == 'missed' %}bg-danger
+        {% else %}bg-warning{% endif %}">
+        {{ med.status }}
+    </span>
+</div>
+{% empty %}
+<p>No prescriptions yet.</p>
+{% endfor %}
+
+{% endblock %}

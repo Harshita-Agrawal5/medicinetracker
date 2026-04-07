@@ -1,0 +1,41 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Add Medicine for {{ patient.username }}</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'add_medicine' patient.id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label">Medicine Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Paracetamol" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="dosage" class="form-label">Dosage <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="dosage" name="dosage" placeholder="e.g., 500mg" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="time" class="form-label">Time <span class="text-danger">*</span></label>
+            <input type="time" class="form-control" id="time" name="time" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="notes" class="form-label">Notes (Optional)</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any extra info"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Medicine</button>
+        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

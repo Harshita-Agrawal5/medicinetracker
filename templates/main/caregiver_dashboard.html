@@ -1,0 +1,55 @@
+{% extends 'main/base.html' %}
+{% load i18n %}
+{% block content %}
+
+<h2 class="mb-4">🧑‍⚕️ {% trans "Caregiver Dashboard" %}</h2>
+
+<!-- SUMMARY -->
+<div class="row text-center mb-4">
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Total Medicines" %}</h6>
+            <h3>{{ medicines|length }}</h3>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Taken" %}</h6>
+            <h3>{{ taken_count }}</h3>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Missed" %}</h6>
+            <h3>{{ missed_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- MEDICINES -->
+{% for med in medicines %}
+<div class="card p-3 mb-3 shadow">
+    <h5>{{ med.name }} - <small>{{ med.patient.user.username }}</small></h5>
+    <p><strong>{% trans "Time" %}:</strong> {{ med.time|time:"H:i" }}</p>
+
+    <span class="badge 
+        {% if med.status == 'taken' %}bg-success
+        {% elif med.status == 'missed' %}bg-danger
+        {% else %}bg-warning{% endif %}">
+        {% if med.status == 'taken' %}Taken
+        {% elif med.status == 'missed' %}Missed
+        {% else %}Pending{% endif %}
+    </span>
+
+    {% if med.status == 'pending' %}
+        <div class="mt-2">
+            <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔ Take</a>
+            <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖ Missed</a>
+        </div>
+    {% endif %}
+</div>
+{% empty %}
+<p>{% trans "No medicines assigned for your patients." %}</p>
+{% endfor %}
+
+{% endblock %}

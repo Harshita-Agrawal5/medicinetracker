@@ -1,0 +1,159 @@
+{% extends 'main/base.html' %}
+{% load i18n %}
+{% block content %}
+
+<h2 class="mb-4">🧑‍💊 {% trans "Patient Dashboard" %}</h2>
+
+<!-- SUMMARY -->
+<div class="row text-center mb-4">
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Total" %}</h6>
+            <h3>{{ medicines|length }}</h3>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Taken" %}</h6>
+            <h3>{{ taken_count }}</h3>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Missed" %}</h6>
+            <h3>{{ missed_count }}</h3>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card p-3 shadow">
+            <h6>{% trans "Pending" %}</h6>
+            <h3>{{ pending_count }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ CHART -->
+<div class="card p-3 mb-4 shadow" style="max-width: 280px; margin:auto;">
+    <canvas id="chart"></canvas>
+</div>
+<!-- ASSIGN CAREGIVER -->
+<div class="card p-3 mb-4 shadow">
+    <h5>Assign Caregiver</h5>
+    {% if profile.caregiver %}
+        <p>Current Caregiver: <strong>{{ profile.caregiver.username }}</strong></p>
+    {% else %}
+        <p>No caregiver assigned yet.</p>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-2">
+            <select name="caregiver" class="form-select">
+                <option value="">-- Select Caregiver --</option>
+                {% for cg in caregivers %}
+                    <option value="{{ cg.id }}" {% if profile.caregiver == cg %}selected{% endif %}>
+                        {{ cg.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
+    </form>
+</div>
+<!-- MEDICINES -->
+{% for med in medicines %}
+<div class="card p-3 mb-3 shadow">
+    <h5>{{ med.name }}</h5>
+    <p><strong>{% trans "Time" %}:</strong> {{ med.time|time:"H:i" }}</p>
+
+    <span class="badge 
+        {% if med.status == 'taken' %}bg-success
+        {% elif med.status == 'missed' %}bg-danger
+        {% else %}bg-warning{% endif %}">
+        {% if med.status == 'taken' %}{% trans "Taken" %}
+        {% elif med.status == 'missed' %}{% trans "Missed" %}
+        {% else %}{% trans "Pending" %}
+        {% endif %}
+    </span>
+
+    {% if med.status == 'pending' %}
+        <div class="mt-2">
+            <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔ Take</a>
+            <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖ Missed</a>
+        </div>
+    {% endif %}
+</div>
+{% empty %}
+<p>{% trans "No medicines assigned." %}</p>
+{% endfor %}
+
+<!-- ✅ CHART SCRIPT -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const ctx = document.getElementById('chart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['{% trans "Taken" %}', '{% trans "Missed" %}', '{% trans "Pending" %}'],
+                datasets: [{
+                    label: '{% trans "Medicine Stats" %}',
+                    data: [{{ taken_count|default:0 }}, {{ missed_count|default:0 }}, {{ pending_count|default:0 }}],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+<!-- 🔔 NOTIFICATION SCRIPT -->
+<script>
+let medicinesList = [
+    {% for med in medicines %}
+    { id: "{{ med.id }}", name: "{{ med.name }}", time: "{{ med.time|time:'H:i' }}", status: "{{ med.status }}" },
+    {% endfor %}
+];
+
+let shown = {};
+
+function checkMedicineTime() {
+    let now = new Date();
+    let currentTime = String(now.getHours()).padStart(2,'0') + ":" + String(now.getMinutes()).padStart(2,'0');
+
+    medicinesList.forEach(med => {
+        if (med.time === currentTime && med.status === "pending" && !shown[med.id]) {
+            shown[med.id] = true;
+            showNotification(med.name, med.id);
+        }
+    });
+}
+
+setInterval(checkMedicineTime, 10000);
+</script>
+
+{% endblock %}
