@@ -7,14 +7,18 @@ from .models import Profile, Medicine, MedicineHistory
 
 # ----------------- DASHBOARD REDIRECT -----------------
 def redirect_dashboard(user):
-    role = user.profile.role
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    role = profile.role
+
     if role == 'doctor':
         return redirect('doctor_dashboard')
     elif role == 'patient':
         return redirect('user_dashboard')
     elif role == 'caregiver':
         return redirect('caregiver_dashboard')
-    return redirect('login')
+    else:
+        return redirect('login')
 
 
 # ----------------- AUTH -----------------
