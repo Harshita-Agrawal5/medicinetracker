@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 # ----------------- PROFILE -----------------
 class Profile(models.Model):
     ROLE_CHOICES = (
@@ -11,15 +12,14 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    
-    # Only add caregiver reference for patient profiles
+
     caregiver = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='patients',  # Caregiver can access all assigned patients
-        limit_choices_to={'profile__role': 'caregiver'}  # Only users with role caregiver
+        related_name='patients',
+        limit_choices_to={'profile__role': 'caregiver'}
     )
 
     def __str__(self):
@@ -39,6 +39,7 @@ class Medicine(models.Model):
     dosage = models.CharField(max_length=50, blank=True, null=True)
     time = models.TimeField()
     date = models.DateField(auto_now_add=True)
+
     prescribed_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -46,8 +47,9 @@ class Medicine(models.Model):
         blank=True,
         related_name='prescriptions'
     )
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-    notes = models.TextField(blank=True, null=True)  # Added notes field
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.name} for {self.patient.username} ({self.status})"
@@ -56,8 +58,35 @@ class Medicine(models.Model):
 # ----------------- MEDICINE HISTORY -----------------
 class MedicineHistory(models.Model):
     medicine = models.ForeignKey(Medicine, on_delete=models.CASCADE, related_name='history')
-    action = models.CharField(max_length=20, choices=Medicine.STATUS_CHOICES)
+    action = models.CharField(max_length=20)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.medicine.name} {self.action} at {self.timestamp}"
+        return f"{self.medicine.name} {self.action}"
+
+
+# ----------------- DISPENSER SLOT -----------------
+class DispenserSlot(models.Model):
+    patient = models.ForeignKey(User, on_delete=models.CASCADE)
+    medicine_name = models.CharField(max_length=100)
+    quantity = models.IntegerField(default=0)
+
+    expected_medicine = models.CharField(max_length=100)
+    actual_medicine = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.medicine_name} - {self.patient.username}"
+
+
+# ----------------- PILL EVENT (POSTMAN API LOG) -----------------
+class PillEvent(models.Model):
+    event_type = models.CharField(max_length=50)
+    message = models.TextField(blank=True)
+
+    patient_name = models.CharField(max_length=100, null=True, blank=True)
+    medicine_name = models.CharField(max_length=100, null=True, blank=True)
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.event_type} - {self.patient_name or 'unknown'}"
