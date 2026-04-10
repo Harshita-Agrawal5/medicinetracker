@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     # Home / Auth
-    path('', views.home, name='home'),
+    path('', views.redirect_user, name='home'),   # ✅ FIXED
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
@@ -24,6 +24,12 @@ urlpatterns = [
     # Medicine History
     path('history/', views.medicine_history, name='medicine_history'),
     path('history/<int:patient_id>/', views.medicine_history, name='medicine_history_patient'),
-    
+
+    # (duplicate kept as you said don't delete)
     path('doctor/patient/<int:patient_id>/', views.patient_detail, name='patient_detail'),
+
+    path('dispenser/', views.dispenser_status, name='dispenser_status'),
+    
+     path('api/pill-event/', views.pill_event),
+    path('dashboard/', views.dashboard),
 ]
