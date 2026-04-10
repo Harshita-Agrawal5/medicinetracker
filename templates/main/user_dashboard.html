@@ -2,92 +2,132 @@
 {% load i18n %}
 {% block content %}
 
-<h2 class="mb-4">🧑‍💊 {% trans "Patient Dashboard" %}</h2>
+<div class="container mt-4">
+
+<h2 class="mb-4 text-center">🧑‍💊 {% trans "Patient Dashboard" %}</h2>
 
 <!-- SUMMARY -->
 <div class="row text-center mb-4">
-    <div class="col">
-        <div class="card p-3 shadow">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card p-3 shadow border-0 bg-light">
             <h6>{% trans "Total" %}</h6>
             <h3>{{ medicines|length }}</h3>
         </div>
     </div>
-    <div class="col">
-        <div class="card p-3 shadow">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card p-3 shadow border-0 bg-success text-white">
             <h6>{% trans "Taken" %}</h6>
             <h3>{{ taken_count }}</h3>
         </div>
     </div>
-    <div class="col">
-        <div class="card p-3 shadow">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card p-3 shadow border-0 bg-danger text-white">
             <h6>{% trans "Missed" %}</h6>
             <h3>{{ missed_count }}</h3>
         </div>
     </div>
-    <div class="col">
-        <div class="card p-3 shadow">
+    <div class="col-md-3 col-6 mb-2">
+        <div class="card p-3 shadow border-0 bg-warning">
             <h6>{% trans "Pending" %}</h6>
             <h3>{{ pending_count }}</h3>
         </div>
     </div>
 </div>
 
-<!-- ✅ CHART -->
-<div class="card p-3 mb-4 shadow" style="max-width: 280px; margin:auto;">
-    <canvas id="chart"></canvas>
-</div>
-<!-- ASSIGN CAREGIVER -->
-<div class="card p-3 mb-4 shadow">
-    <h5>Assign Caregiver</h5>
-    {% if profile.caregiver %}
-        <p>Current Caregiver: <strong>{{ profile.caregiver.username }}</strong></p>
-    {% else %}
-        <p>No caregiver assigned yet.</p>
-    {% endif %}
-
-    <form method="POST">
-        {% csrf_token %}
-        <div class="mb-2">
-            <select name="caregiver" class="form-select">
-                <option value="">-- Select Caregiver --</option>
-                {% for cg in caregivers %}
-                    <option value="{{ cg.id }}" {% if profile.caregiver == cg %}selected{% endif %}>
-                        {{ cg.username }}
-                    </option>
-                {% endfor %}
-            </select>
+<!-- CHART + CAREGIVER -->
+<div class="row mb-4">
+    <!-- CHART -->
+    <div class="col-md-4 mb-3">
+        <div class="card p-3 shadow text-center">
+            <canvas id="chart"></canvas>
         </div>
-        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
-    </form>
-</div>
-<!-- MEDICINES -->
-{% for med in medicines %}
-<div class="card p-3 mb-3 shadow">
-    <h5>{{ med.name }}</h5>
-    <p><strong>{% trans "Time" %}:</strong> {{ med.time|time:"H:i" }}</p>
+    </div>
 
-    <span class="badge 
-        {% if med.status == 'taken' %}bg-success
-        {% elif med.status == 'missed' %}bg-danger
-        {% else %}bg-warning{% endif %}">
-        {% if med.status == 'taken' %}{% trans "Taken" %}
-        {% elif med.status == 'missed' %}{% trans "Missed" %}
-        {% else %}{% trans "Pending" %}
-        {% endif %}
-    </span>
+    <!-- CAREGIVER -->
+    <div class="col-md-8">
+        <div class="card p-3 shadow">
+            <h5>Assign Caregiver</h5>
 
-    {% if med.status == 'pending' %}
-        <div class="mt-2">
-            <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔ Take</a>
-            <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖ Missed</a>
+            {% if profile.caregiver %}
+                <p>Current Caregiver: <strong>{{ profile.caregiver.username }}</strong></p>
+            {% else %}
+                <p>No caregiver assigned yet.</p>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="d-flex gap-2">
+                    <select name="caregiver" class="form-select">
+                        <option value="">-- Select Caregiver --</option>
+                        {% for cg in caregivers %}
+                            <option value="{{ cg.id }}" {% if profile.caregiver == cg %}selected{% endif %}>
+                                {{ cg.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary">Assign</button>
+                </div>
+            </form>
         </div>
-    {% endif %}
+    </div>
 </div>
-{% empty %}
-<p>{% trans "No medicines assigned." %}</p>
-{% endfor %}
 
-<!-- ✅ CHART SCRIPT -->
+<!-- MEDICINES (TIMELINE STYLE) -->
+<div class="card shadow p-3">
+    <h5 class="mb-3">💊 {% trans "Your Medicines" %}</h5>
+
+    {% for med in medicines %}
+    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+
+        <!-- LEFT SIDE -->
+        <div>
+            <h6 class="mb-1">{{ med.name }}</h6>
+            <small class="text-muted">
+                ⏰ {{ med.time|time:"H:i" }}
+            </small>
+        </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="text-end">
+
+            <!-- STATUS -->
+            <span class="badge 
+                {% if med.status == 'taken' %}bg-success
+                {% elif med.status == 'missed' %}bg-danger
+                {% else %}bg-warning text-dark{% endif %}">
+                
+                {% if med.status == 'taken' %}{% trans "Taken" %}
+                {% elif med.status == 'missed' %}{% trans "Missed" %}
+                {% else %}{% trans "Pending" %}
+                {% endif %}
+            </span>
+
+            <!-- ACTION BUTTONS -->
+            {% if med.status == 'pending' %}
+            <div class="mt-2">
+                <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔</a>
+                <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖</a>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    {% empty %}
+    <p class="text-center">{% trans "No medicines assigned." %}</p>
+    {% endfor %}
+</div>
+
+<!-- DISPOSER BUTTON -->
+<div class="text-center mt-4">
+    <a href="{% url 'dispenser_status' %}" class="btn btn-dark">
+        🔍 View Dispenser
+    </a>
+</div>
+
+</div>
+
+<!-- CHART SCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -98,32 +138,17 @@ document.addEventListener("DOMContentLoaded", function () {
             data: {
                 labels: ['{% trans "Taken" %}', '{% trans "Missed" %}', '{% trans "Pending" %}'],
                 datasets: [{
-                    label: '{% trans "Medicine Stats" %}',
                     data: [{{ taken_count|default:0 }}, {{ missed_count|default:0 }}, {{ pending_count|default:0 }}],
                     backgroundColor: [
                         'rgba(75, 192, 192, 0.7)',
                         'rgba(255, 99, 132, 0.7)',
                         'rgba(255, 206, 86, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(255, 206, 86, 1)'
-                    ],
-                    borderWidth: 1
+                    ]
                 }]
             },
             options: {
-                responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.raw;
-                            }
-                        }
-                    }
+                    legend: { position: 'bottom' }
                 }
             }
         });
@@ -131,7 +156,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<!-- 🔔 NOTIFICATION SCRIPT -->
+<!-- NOTIFICATION SCRIPT -->
 <script>
 let medicinesList = [
     {% for med in medicines %}
