@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib import admin
 from .models import Profile, Medicine, MedicineHistory
+from .models import DispenserSlot
 
+admin.site.register(DispenserSlot)
 # Profile admin to show caregiver assignment
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -22,3 +24,10 @@ class MedicineHistoryAdmin(admin.ModelAdmin):
     list_display = ('medicine', 'action', 'timestamp')
     list_filter = ('action',)
 # Register your models here.
+
+
+from django.contrib import admin
+from .models import PillEvent
+
+admin.site.register(PillEvent)
+
