@@ -1,32 +1,100 @@
 {% extends 'main/base.html' %}
 {% block content %}
 
-<h2 class="mb-3">👨‍⚕️ Doctor Dashboard</h2>
+<div class="container mt-4">
 
-{% for patient in patients %}
-  <div>
-    <h4>{{ patient.username }}</h4>
-    <a href="{% url 'patient_detail' patient.id %}">View Details</a>
-    <a href="{% url 'add_medicine' patient.id %}">Add Medicine</a>
-  </div>
-{% endfor %}
+    <!-- HEADER -->
+    <h2 class="mb-4 text-center">👨‍⚕️ Doctor Dashboard</h2>
 
-{% for med in medicines %}
-<div class="card p-3 mb-3 shadow">
-    <h5>{{ med.name }}</h5>
-    <p><strong>Patient:</strong> {{ med.patient.username }}</p>
-    <p><strong>Dosage:</strong> {{ med.dosage }}</p>
-    <p><strong>Time:</strong> {{ med.time }}</p>
+    <!-- SEARCH BAR -->
+    <div class="input-group mb-3">
+        <span class="input-group-text">🔍</span>
+        <input type="text" id="patientSearch" class="form-control" placeholder="Search patient...">
+    </div>
 
-    <span class="badge 
-        {% if med.status == 'taken' %}bg-success
-        {% elif med.status == 'missed' %}bg-danger
-        {% else %}bg-warning{% endif %}">
-        {{ med.status }}
-    </span>
+    <!-- PATIENT SECTION -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Patients</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                {% for patient in patients %}
+                <div class="col-md-4 mb-3 patient-card">
+                    <div class="card p-3 shadow-sm">
+                        <h5>{{ patient.username }}</h5>
+
+                        <div class="d-flex justify-content-between mt-2">
+                            <a href="{% url 'patient_detail' patient.id %}" 
+                               class="btn btn-sm btn-info text-white">
+                               View
+                            </a>
+
+                            <a href="{% url 'add_medicine' patient.id %}" 
+                               class="btn btn-sm btn-success">
+                               + Add
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No patients assigned.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- MEDICINE SECTION -->
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Prescriptions</h5>
+        </div>
+
+        <div class="card-body">
+            {% for med in medicines %}
+            <div class="card p-3 mb-3 shadow-sm border-0">
+
+                <div class="d-flex justify-content-between">
+                    <h5 class="mb-1">{{ med.name }}</h5>
+
+                    <span class="badge 
+                        {% if med.status == 'taken' %}bg-success
+                        {% elif med.status == 'missed' %}bg-danger
+                        {% else %}bg-warning text-dark{% endif %}">
+                        {{ med.status|title }}
+                    </span>
+                </div>
+
+                <p class="mb-1"><strong>Patient:</strong> {{ med.patient.username }}</p>
+                <p class="mb-1"><strong>Dosage:</strong> {{ med.dosage }}</p>
+                <p class="mb-0"><strong>Time:</strong> {{ med.time }}</p>
+
+            </div>
+            {% empty %}
+            <p>No prescriptions yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
 </div>
-{% empty %}
-<p>No prescriptions yet.</p>
-{% endfor %}
+
+<!-- 🔍 SEARCH SCRIPT -->
+<script>
+document.getElementById("patientSearch").addEventListener("keyup", function() {
+    let filter = this.value.toLowerCase();
+    let patients = document.querySelectorAll(".patient-card");
+
+    patients.forEach(function(card) {
+        let name = card.innerText.toLowerCase();
+
+        if (name.includes(filter)) {
+            card.style.display = "";
+        } else {
+            card.style.display = "none";
+        }
+    });
+});
+</script>
 
 {% endblock %}
