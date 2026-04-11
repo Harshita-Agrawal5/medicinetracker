@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -186,6 +187,23 @@ def user_dashboard(request):
     # 🔥 EXTRA SAFETY: always re-fetch latest profile (ADD ONLY)
     profile.refresh_from_db()
 
+    # ================= NEW ADDITION START =================
+    from collections import defaultdict
+    from django.utils import timezone
+
+    grouped_medicines = defaultdict(list)
+
+    for med in medicines:
+        date = med.created_at.date() if hasattr(med, 'created_at') else timezone.now().date()
+        grouped_medicines[date].append(med)
+
+    # Sort dates (latest first)
+    grouped_medicines = dict(sorted(grouped_medicines.items(), reverse=True))
+
+    today = timezone.now().date()
+    yesterday = today - timezone.timedelta(days=1)
+    # ================= NEW ADDITION END =================
+
     return render(request, 'main/user_dashboard.html', {
         'medicines': medicines,
         'taken_count': taken_count,
@@ -193,26 +211,12 @@ def user_dashboard(request):
         'pending_count': pending_count,
         'profile': profile,
         'caregivers': caregivers,
+
+        # 🔥 NEW DATA FOR UI
+        'grouped_medicines': grouped_medicines,
+        'today': today,
+        'yesterday': yesterday,
     })
-
-
-@login_required
-def take_medicine(request, med_id):
-    med = get_object_or_404(Medicine, id=med_id, patient=request.user)
-    med.status = 'taken'
-    med.save()
-    MedicineHistory.objects.create(medicine=med, action='taken')
-    return redirect('user_dashboard')
-
-
-@login_required
-def mark_missed(request, med_id):
-    med = get_object_or_404(Medicine, id=med_id, patient=request.user)
-    med.status = 'missed'
-    med.save()
-    MedicineHistory.objects.create(medicine=med, action='missed')
-    return redirect('user_dashboard')
-
 
 # ----------------- CAREGIVER DASHBOARD -----------------
 @login_required
@@ -341,3 +345,20 @@ def pill_event(request):
 def dashboard(request):
     events = PillEvent.objects.order_by('-timestamp')[:10]
     return render(request, "dashboard.html", {"events": events})
+
+@login_required
+def take_medicine(request, med_id):
+    med = get_object_or_404(Medicine, id=med_id, patient=request.user)
+    med.status = 'taken'
+    med.save()
+    MedicineHistory.objects.create(medicine=med, action='taken')
+    return redirect('user_dashboard')
+
+
+@login_required
+def mark_missed(request, med_id):
+    med = get_object_or_404(Medicine, id=med_id, patient=request.user)
+    med.status = 'missed'
+    med.save()
+    MedicineHistory.objects.create(medicine=med, action='missed')
+    return redirect('user_dashboard')
