@@ -36,14 +36,12 @@
 
 <!-- CHART + CAREGIVER -->
 <div class="row mb-4">
-    <!-- CHART -->
     <div class="col-md-4 mb-3">
         <div class="card p-3 shadow text-center">
             <canvas id="chart"></canvas>
         </div>
     </div>
 
-    <!-- CAREGIVER -->
     <div class="col-md-8">
         <div class="card p-3 shadow">
             <h5>Assign Caregiver</h5>
@@ -72,49 +70,73 @@
     </div>
 </div>
 
-<!-- MEDICINES (TIMELINE STYLE) -->
+<!-- MEDICINES (UPGRADED DATE-WISE UI) -->
 <div class="card shadow p-3">
     <h5 class="mb-3">💊 {% trans "Your Medicines" %}</h5>
 
-    {% for med in medicines %}
-    <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+    {% regroup medicines by date as dated_medicines %}
 
-        <!-- LEFT SIDE -->
-        <div>
-            <h6 class="mb-1">{{ med.name }}</h6>
-            <small class="text-muted">
-                ⏰ {{ med.time|time:"H:i" }}
-            </small>
-        </div>
+    {% for group in dated_medicines %}
 
-        <!-- RIGHT SIDE -->
-        <div class="text-end">
-
-            <!-- STATUS -->
-            <span class="badge 
-                {% if med.status == 'taken' %}bg-success
-                {% elif med.status == 'missed' %}bg-danger
-                {% else %}bg-warning text-dark{% endif %}">
-                
-                {% if med.status == 'taken' %}{% trans "Taken" %}
-                {% elif med.status == 'missed' %}{% trans "Missed" %}
-                {% else %}{% trans "Pending" %}
+        <!-- DATE HEADER -->
+        <div class="bg-light p-2 mt-3 rounded d-flex justify-content-between align-items-center"
+             data-bs-toggle="collapse" data-bs-target="#date{{ forloop.counter }}" style="cursor:pointer;">
+            
+            <strong>
+                📅 
+                {% if group.grouper == today %}
+                    Today
+                {% elif group.grouper == yesterday %}
+                    Yesterday
+                {% else %}
+                    {{ group.grouper|date:"F d, Y" }}
                 {% endif %}
-            </span>
+            </strong>
 
-            <!-- ACTION BUTTONS -->
-            {% if med.status == 'pending' %}
-            <div class="mt-2">
-                <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔</a>
-                <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖</a>
+            <span>▼</span>
+        </div>
+
+        <!-- COLLAPSIBLE MEDICINES -->
+        <div id="date{{ forloop.counter }}" class="collapse show">
+
+            {% for med in group.list %}
+            <div class="d-flex justify-content-between align-items-center border-bottom py-3">
+
+                <!-- LEFT -->
+                <div>
+                    <h6 class="mb-1">{{ med.name }}</h6>
+                    <small class="text-muted">⏰ {{ med.time|time:"H:i" }}</small>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="text-end">
+
+                    <span class="badge 
+                        {% if med.status == 'taken' %}bg-success
+                        {% elif med.status == 'missed' %}bg-danger
+                        {% else %}bg-warning text-dark{% endif %}">
+                        
+                        {% if med.status == 'taken' %}✔ Taken
+                        {% elif med.status == 'missed' %}✖ Missed
+                        {% else %}⏳ Pending
+                        {% endif %}
+                    </span>
+
+                    {% if med.status == 'pending' %}
+                    <div class="mt-2">
+                        <a href="{% url 'take_medicine' med.id %}" class="btn btn-success btn-sm">✔</a>
+                        <a href="{% url 'mark_missed' med.id %}" class="btn btn-danger btn-sm">✖</a>
+                    </div>
+                    {% endif %}
+
+                </div>
             </div>
-            {% endif %}
+            {% endfor %}
 
         </div>
-    </div>
 
     {% empty %}
-    <p class="text-center">{% trans "No medicines assigned." %}</p>
+        <p class="text-center">{% trans "No medicines assigned." %}</p>
     {% endfor %}
 </div>
 
