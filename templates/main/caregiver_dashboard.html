@@ -52,4 +52,8 @@
 <p>{% trans "No medicines assigned for your patients." %}</p>
 {% endfor %}
 
+<a href="{% url 'dispenser_status' %}">
+    <button>View Dispenser</button>
+</a>
+
 {% endblock %}
