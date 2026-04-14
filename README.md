@@ -16,18 +16,29 @@ Manage prescriptions in one place
 The system is built using Django for backend logic and a responsive frontend for smooth interaction.
 
 ✨ Features
+
 🔐 User Authentication
+
 Secure signup and login system
+
 ⏰ Medication Scheduling
+
 Add medicines with dosage time and frequency
+
 🔔 Reminders & Alerts
+
 Notifies users for upcoming or missed doses
+
 📊 Medication Tracking
+
 Maintain history of taken/missed medicines
+
 🧾 CRUD Operations
 Create, update, and delete prescriptions easily
+
 ⚡ Responsive UI
 Clean and simple interface for better usability
+
 🛠️ Tech Stack
 Backend
 Python
